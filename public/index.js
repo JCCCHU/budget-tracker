@@ -136,6 +136,13 @@ function sendTransaction(isAdding) {
         })
       })
       console.log("Done");
+      return true;
+    }).then(res => {
+      if (res) {
+        useIndexedDb("budget", "pending", "clear").then(results => {
+          console.log(results);
+        })
+      }
     })
 
     return response.json();
