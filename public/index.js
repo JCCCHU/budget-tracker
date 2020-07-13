@@ -121,7 +121,23 @@ function sendTransaction(isAdding) {
       "Content-Type": "application/json"
     }
   })
-  .then(response => {    
+  .then(response => {
+    // If we find any pending transactions in local storage, put them now
+    useIndexedDb("budget", "pending", "get").then(results => {
+      console.log("Resolving pending transactions");
+      results.forEach(transaction => {
+        fetch("/api/transaction", {
+          method: "POST",
+          body: JSON.stringify(transaction),
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            "Content-Type": "application/json"
+          }
+        })
+      })
+      console.log("Done");
+    })
+
     return response.json();
   })
   .then(data => {
@@ -163,8 +179,10 @@ document.querySelector("#sub-btn").onclick = function() {
   sendTransaction(false);
 };
 
+// For some reason I couldn't import modules. So its all here.
 function useIndexedDb(databaseName, storeName, method, object) {
   return new Promise((resolve, reject) => {
+    console.log("In useIndexedDb");
     const request = window.indexedDB.open(databaseName, 1);
     let db,
       tx,
@@ -188,18 +206,22 @@ function useIndexedDb(databaseName, storeName, method, object) {
         console.log("error");
       };
       if (method === "put") {
+        console.log("Put");
         store.put(object);
       }
       if (method === "clear") {
+        console.log("Clear");
         store.clear();
       }
       if (method === "get") {
+        console.log("Get");
         const all = store.getAll();
         all.onsuccess = function() {
           resolve(all.result);
         };
       }
       tx.oncomplete = function() {
+        console.log("Exiting useIndexedDb");
         db.close();
       };
     };
