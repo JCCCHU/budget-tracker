@@ -136,11 +136,22 @@ function sendTransaction(isAdding) {
   })
   .catch(err => {
     // fetch failed, so save in indexed db
+    console.log(err);
     saveRecord(transaction);
 
     // clear form
     nameEl.value = "";
     amountEl.value = "";
+  });
+}
+
+function saveRecord(transaction) {
+  console.log("Couldn't access server. Saving to indexed DB");
+  console.log(transaction);
+  useIndexedDb("budget", "pending", "put", {
+    name: transaction.name,
+    value: transaction.value,
+    date: transaction.date
   });
 }
 
@@ -151,3 +162,46 @@ document.querySelector("#add-btn").onclick = function() {
 document.querySelector("#sub-btn").onclick = function() {
   sendTransaction(false);
 };
+
+function useIndexedDb(databaseName, storeName, method, object) {
+  return new Promise((resolve, reject) => {
+    const request = window.indexedDB.open(databaseName, 1);
+    let db,
+      tx,
+      store;
+
+    request.onupgradeneeded = function(e) {
+      const db = request.result;
+      db.createObjectStore(storeName, { keyPath: "_id" });
+    };
+
+    request.onerror = function(e) {
+      console.log("There was an error");
+    };
+
+    request.onsuccess = function(e) {
+      db = request.result;
+      tx = db.transaction(storeName, "readwrite");
+      store = tx.objectStore(storeName);
+
+      db.onerror = function(e) {
+        console.log("error");
+      };
+      if (method === "put") {
+        store.put(object);
+      }
+      if (method === "clear") {
+        store.clear();
+      }
+      if (method === "get") {
+        const all = store.getAll();
+        all.onsuccess = function() {
+          resolve(all.result);
+        };
+      }
+      tx.oncomplete = function() {
+        db.close();
+      };
+    };
+  });
+}
