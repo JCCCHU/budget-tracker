@@ -4,7 +4,7 @@ This was an interesting exercise to add offline functionality to our app.
 
 The app worked by sending requests to the database when transactions are submitted. However, if the database was offline, these transactions wouldn't be recorded, and they would disappear when you reconnected.
 
-To enable "offline data entry", we log these transactions in the indexedDB when the user submits them. These entries are still tallied and displayed while the user's offline. When the user reconnects and submits a new entry, the indexed DB
+To enable "offline data entry", we log these transactions in the indexed DB when the user submits them. These entries are still tallied and displayed while the user's offline. When the user reconnects and submits a new entry, the pending transactions are loaded from the indexed DB and submitted.
 
 Issues/room for improvement:
 
